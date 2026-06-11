@@ -1,0 +1,704 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TED Process Library</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --muir:#1B2838; --sequoia:#5C3D2E; --arroyo:#D4793A; --farallon:#2A7A6E;
+  --pearl:#FAF8F5; --mojave:#E8DFD0;
+  --ink:#1B2838; --muted:#6B6256; --line:#E2D9C9; --white:#fff;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{font-family:'DM Sans',system-ui,sans-serif;background:var(--pearl);color:var(--ink);font-size:15px;line-height:1.5;-webkit-font-smoothing:antialiased}
+.mono{font-family:'DM Mono',monospace}
+button{font-family:inherit;cursor:pointer}
+input,textarea,select{font-family:inherit;font-size:14px}
+a{color:var(--farallon)}
+
+/* layout */
+#app{display:flex;min-height:100vh}
+#sidebar{width:236px;flex:0 0 236px;background:var(--muir);color:var(--pearl);display:flex;flex-direction:column;position:sticky;top:0;height:100vh}
+#main{flex:1;min-width:0;padding:34px 44px 80px;max-width:1080px}
+.brand{padding:26px 22px 20px}
+.brand .name{font-weight:700;font-size:17px;letter-spacing:.2px}
+.brand .sub{font-size:10.5px;letter-spacing:2.5px;text-transform:uppercase;color:#9AA7B2;margin-top:3px}
+nav{padding:8px 12px;display:flex;flex-direction:column;gap:2px}
+nav button{display:flex;align-items:center;gap:10px;width:100%;text-align:left;background:transparent;border:none;color:#C6CFD6;padding:9px 12px;border-radius:7px;font-size:14px;font-weight:500}
+nav button:hover{background:rgba(255,255,255,.06);color:#fff}
+nav button.active{background:rgba(212,121,58,.16);color:#fff}
+nav button .dot{width:7px;height:7px;border-radius:50%;background:var(--arroyo);opacity:0;flex:0 0 7px}
+nav button.active .dot{opacity:1}
+.side-foot{margin-top:auto;padding:16px 20px;border-top:1px solid rgba(255,255,255,.08);font-size:12px;color:#8C99A4}
+#saveStatus{display:flex;align-items:center;gap:7px}
+#saveStatus .led{width:8px;height:8px;border-radius:50%;background:#5B6A75}
+#saveStatus.saving .led{background:var(--arroyo)}
+#saveStatus.saved .led{background:var(--farallon)}
+#saveStatus.failed .led{background:#C7544A}
+
+/* headers */
+.page-head{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;margin-bottom:22px;flex-wrap:wrap}
+h1{font-size:27px;font-weight:700;margin:0;letter-spacing:-.3px}
+.eyebrow{font-family:'DM Mono',monospace;font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-bottom:6px}
+.sub-line{color:var(--muted);font-size:13.5px}
+
+/* controls */
+.toolbar{display:flex;gap:12px;align-items:center;margin-bottom:18px;flex-wrap:wrap}
+.search{flex:1;min-width:220px;position:relative}
+.search input{width:100%;padding:11px 14px 11px 38px;border:1px solid var(--line);border-radius:9px;background:#fff}
+.search svg{position:absolute;left:13px;top:50%;transform:translateY(-50%);opacity:.45}
+.chips{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:24px}
+.chip{border:1px solid var(--line);background:#fff;padding:6px 13px;border-radius:20px;font-size:12.5px;font-weight:500;color:var(--muted);display:flex;align-items:center;gap:7px}
+.chip .cdot{width:9px;height:9px;border-radius:50%}
+.chip.active{color:#fff;border-color:transparent}
+.btn{border:1px solid var(--line);background:#fff;padding:10px 16px;border-radius:9px;font-weight:600;font-size:13.5px;color:var(--ink)}
+.btn:hover{background:var(--mojave)}
+.btn.primary{background:var(--arroyo);border-color:var(--arroyo);color:#fff}
+.btn.primary:hover{background:#c06b30}
+.btn.ghost{background:transparent}
+.btn.danger{color:#C7544A;border-color:#e6c4bf}
+.btn.danger:hover{background:#fbeeec}
+.btn.sm{padding:6px 11px;font-size:12.5px}
+
+/* cards */
+.cat-group{margin-bottom:30px}
+.cat-group h2{font-size:13px;font-family:'DM Mono',monospace;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);margin:0 0 12px;display:flex;align-items:center;gap:9px}
+.cat-group h2 .cdot{width:11px;height:11px;border-radius:50%}
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px}
+.card{background:#fff;border:1px solid var(--line);border-left:4px solid var(--line);border-radius:11px;padding:16px 18px;cursor:pointer;transition:transform .08s,box-shadow .12s}
+.card:hover{transform:translateY(-2px);box-shadow:0 8px 22px rgba(27,40,56,.10)}
+.card .ct{font-weight:600;font-size:15.5px;margin-bottom:5px;line-height:1.3}
+.card .cs{color:var(--muted);font-size:13px;margin-bottom:12px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.card .cmeta{display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:11.5px;color:var(--muted)}
+.badge{font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.8px;text-transform:uppercase;padding:3px 8px;border-radius:5px;font-weight:500}
+.badge.Draft{background:#F3EAD8;color:#9A7B33}
+.badge.Published{background:#DCEFE9;color:#1F6E5F}
+.badge.Archived{background:#EAE6E0;color:#827A6D}
+
+/* detail */
+.detail{max-width:760px}
+.back{display:inline-flex;align-items:center;gap:6px;background:none;border:none;color:var(--muted);font-size:13px;font-weight:500;padding:0;margin-bottom:18px}
+.back:hover{color:var(--ink)}
+.detail-head{display:flex;justify-content:space-between;align-items:flex-start;gap:20px;flex-wrap:wrap;margin-bottom:8px}
+.detail h1{margin-bottom:8px}
+.detail-meta{display:flex;gap:14px;flex-wrap:wrap;color:var(--muted);font-size:12px;margin-bottom:6px;align-items:center}
+.detail-actions{display:flex;gap:8px;flex-wrap:wrap}
+.lede{font-size:16px;color:#473d30;margin:14px 0 26px;line-height:1.55}
+.block{margin-bottom:28px}
+.block-h{font-family:'DM Mono',monospace;font-size:11.5px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin:0 0 12px;padding-bottom:7px;border-bottom:1px solid var(--line)}
+.mats{list-style:none;padding:0;margin:0;display:flex;flex-wrap:wrap;gap:8px}
+.mats li{background:#fff;border:1px solid var(--line);border-radius:7px;padding:6px 11px;font-size:13px}
+.safety{background:#FBF1EC;border:1px solid #EBC9B6;border-left:4px solid var(--arroyo);border-radius:9px;padding:14px 16px;font-size:14px;color:#7a4a2a}
+.safety .sh{font-weight:700;font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:var(--arroyo);margin-bottom:5px;font-family:'DM Mono',monospace}
+.section-block{margin-bottom:22px}
+.section-title{font-weight:700;font-size:16px;margin:0 0 12px;color:var(--muir)}
+.steps{list-style:none;padding:0;margin:0;counter-reset:st}
+.step{display:flex;gap:14px;padding:11px 0;border-top:1px dashed var(--line)}
+.step:first-child{border-top:none}
+.step .num{counter-increment:st;font-family:'DM Mono',monospace;font-size:13px;font-weight:500;color:#fff;background:var(--catcolor,var(--sequoia));width:26px;height:26px;flex:0 0 26px;border-radius:50%;display:flex;align-items:center;justify-content:center;margin-top:1px}
+.step .num::before{content:counter(st)}
+.step .sbody{flex:1;min-width:0}
+.step .stitle{font-weight:600;margin-bottom:2px}
+.step .sdesc{font-size:14px;color:#3c3527}
+.step .snote{margin-top:7px;background:#F3EFE7;border-left:3px solid var(--mojave);border-radius:0 6px 6px 0;padding:7px 11px;font-size:12.5px;color:var(--muted)}
+.step .snote b{color:var(--sequoia);font-family:'DM Mono',monospace;font-size:10px;letter-spacing:1px;text-transform:uppercase;display:block;margin-bottom:2px}
+.related{display:flex;flex-wrap:wrap;gap:8px}
+.related a{background:#fff;border:1px solid var(--line);border-radius:7px;padding:7px 12px;font-size:13px;text-decoration:none;color:var(--farallon);font-weight:500}
+.related a:hover{background:var(--mojave)}
+
+/* forms */
+.form{max-width:760px}
+.field{margin-bottom:18px}
+.field label{display:block;font-weight:600;font-size:13px;margin-bottom:6px}
+.field .hint{font-weight:400;color:var(--muted);font-size:12px}
+.field input[type=text],.field textarea,.field select{width:100%;padding:10px 12px;border:1px solid var(--line);border-radius:8px;background:#fff}
+.field textarea{resize:vertical;min-height:64px;line-height:1.5}
+.row2{display:flex;gap:16px;flex-wrap:wrap}
+.row2>.field{flex:1;min-width:200px}
+.mat-row,.rel-row{display:flex;gap:8px;margin-bottom:8px;align-items:center}
+.mat-row input{flex:1}
+.iconbtn{border:1px solid var(--line);background:#fff;width:34px;height:34px;border-radius:8px;flex:0 0 34px;font-size:16px;color:var(--muted);display:flex;align-items:center;justify-content:center}
+.iconbtn:hover{background:#fbeeec;color:#C7544A;border-color:#e6c4bf}
+.sec-edit{border:1px solid var(--line);border-radius:11px;padding:16px;margin-bottom:14px;background:#fff}
+.sec-edit-head{display:flex;gap:8px;margin-bottom:12px;align-items:center}
+.sec-edit-head input{flex:1;font-weight:600}
+.step-edit{border:1px solid var(--line);border-radius:9px;padding:12px;margin-bottom:10px;background:var(--pearl)}
+.step-edit .se-top{display:flex;gap:8px;align-items:center;margin-bottom:8px}
+.step-edit .se-top .mono{color:var(--muted);font-size:12px;flex:0 0 auto}
+.step-edit .se-top input{flex:1}
+.step-edit textarea{width:100%;margin-bottom:8px}
+.rel-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:6px}
+.rel-grid label{display:flex;gap:8px;align-items:center;font-weight:400;font-size:13.5px;padding:6px 8px;border:1px solid var(--line);border-radius:7px;background:#fff;cursor:pointer}
+.form-foot{display:flex;gap:10px;margin-top:8px;padding-top:18px;border-top:1px solid var(--line);position:sticky;bottom:0;background:linear-gradient(transparent,var(--pearl) 30%);padding-bottom:6px}
+
+/* categories editor */
+.cat-edit-row{display:flex;gap:10px;align-items:center;background:#fff;border:1px solid var(--line);border-radius:9px;padding:10px 12px;margin-bottom:9px}
+.cat-edit-row input[type=text]{flex:1;border:1px solid transparent;background:transparent;font-weight:600;padding:6px 8px;border-radius:6px}
+.cat-edit-row input[type=text]:focus{border-color:var(--line);background:#fff}
+.cat-edit-row input[type=color]{width:38px;height:34px;border:1px solid var(--line);border-radius:7px;background:#fff;padding:2px;cursor:pointer}
+
+/* empty + setup */
+.empty{text-align:center;padding:70px 20px;color:var(--muted)}
+.empty h3{color:var(--ink);font-size:19px;margin:0 0 8px}
+.empty p{margin:0 auto 20px;max-width:420px}
+.setup-wrap{display:flex;align-items:center;justify-content:center;min-height:100vh;width:100%;padding:24px}
+.setup{background:#fff;border:1px solid var(--line);border-radius:16px;padding:40px;max-width:540px;width:100%;box-shadow:0 20px 50px rgba(27,40,56,.12)}
+.setup .sub{font-size:10.5px;letter-spacing:2.5px;text-transform:uppercase;color:var(--arroyo);font-family:'DM Mono',monospace;margin-bottom:6px}
+.setup h1{font-size:25px;margin-bottom:6px}
+.setup p{color:var(--muted);margin-top:0;font-size:14px}
+.setup ol{color:var(--muted);font-size:13.5px;line-height:1.7;padding-left:18px}
+.setup input{width:100%;padding:12px 14px;border:1px solid var(--line);border-radius:9px;margin:6px 0 14px;font-family:'DM Mono',monospace;font-size:13px}
+.setup-msg{font-size:13px;margin-top:12px;min-height:18px}
+.setup-msg.err{color:#C7544A}
+.setup-msg.ok{color:var(--farallon)}
+.toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--muir);color:#fff;padding:11px 20px;border-radius:10px;font-size:13.5px;opacity:0;transition:.25s;pointer-events:none;z-index:60;box-shadow:0 10px 30px rgba(0,0,0,.25)}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+@media(max-width:760px){
+  #app{flex-direction:column}
+  #sidebar{width:100%;height:auto;position:static;flex-direction:row;flex-wrap:wrap;align-items:center}
+  .brand{padding:14px 18px}
+  nav{flex-direction:row;flex-wrap:wrap;flex:1}
+  .side-foot{border-top:none;margin:0;padding:14px 18px}
+  #main{padding:24px 20px 70px}
+}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<div class="toast" id="toast"></div>
+<script>
+const STARTER_LIBRARY = {"processes": [{"id": "p-template-receiving", "title": "Template Receiving Process", "category": "intake", "subcategory": "", "status": "Draft", "summary": "Checking templates into inventory when they arrive at the workshop.", "materials": [], "safety": "", "sections": [{"id": "sec5", "title": "", "steps": [{"id": "s1", "title": "", "description": "Check into template inventory.", "notes": ""}, {"id": "s2", "title": "", "description": "Update Todoist that it's received, how many pieces, location.", "notes": ""}, {"id": "s3", "title": "", "description": "Make sure all pieces are labeled with client and project name and numbered based on complete set (1 of 5, 2 of 5...).", "notes": ""}, {"id": "s4", "title": "", "description": "Check all joints for adhesion failure and reglue as needed.", "notes": ""}]}], "relatedProcesses": [], "author": "Imported from Technical Manual", "createdAt": "2026-06-10T00:00:00Z", "lastEditedBy": "Imported from Technical Manual", "lastEditedAt": "2026-06-10T00:00:00Z"}, {"id": "p-onsite-measurement", "title": "Onsite Measurement", "category": "intake", "subcategory": "", "status": "Draft", "summary": "Standards and method for measuring a location onsite for a leaded glass project.", "materials": ["Measuring tape", "Pad of paper on a clipboard", "Sharpened pencils", "Combination square", "3x5 cards", "Laptop", "Paper backups"], "safety": "", "sections": [{"id": "sec10", "title": "Professionalism", "steps": [{"id": "s6", "title": "", "description": "Wear a TED shirt and dress respectably. You're representing everything we have done over the past 25 years and everyone else on the team. We always want to make a good impression.", "notes": ""}, {"id": "s7", "title": "", "description": "Be on time.", "notes": ""}, {"id": "s8", "title": "", "description": "Be organized — know what you're measuring beforehand. Have your documents formatted and readily accessible. Be sure your satellite is available offline (File > Make Available Offline). It's a good idea to have paper backups in case there are computer snafus.", "notes": ""}, {"id": "s9", "title": "", "description": "Be efficient: with focus and preparation, you should be able to get in and gather what you need in a minimum amount of time.", "notes": ""}]}, {"id": "sec17", "title": "How to Measure", "steps": [{"id": "s11", "title": "", "description": "Every project is unique. Sometimes the stop can't be removed, so you can't record the EOS. Sometimes the leaded glass will be installed directly against existing glass, so there is no RAB. The most important thing is to record what you see and describe the specifics so this information can be accessed later.", "notes": ""}, {"id": "s12", "title": "", "description": "Apply workshop standards and practices as you gather information. It's essential to make executive judgements while you're onsite. If three windows are about the same size but have minor variances (+/- 1/32\"), go with the average — because most often we're going to make a single panel dimension for all three openings.", "notes": ""}, {"id": "s13", "title": "", "description": "If there are variations that might be visible — say something like 1/8\" to 1/4\" — record that, as we may want to resize a panel to eliminate that variation. No matter the situation, if you're unsure of the solution, just make sure you've got all the information recorded so we can review in the workshop.", "notes": ""}, {"id": "s14", "title": "", "description": "Since the output will be in 1/16\", the input should follow suit. Recording the minute details of dimensional variation requires more time and can cause confusion in the workshop. There's a reason we don't take calipers onsite — too much info. It's better to come up with a solution while onsite and determine if that will work. I will often select a dimension that is the average of the openings. Once I have that, I'll measure each opening to see how that will work.", "notes": ""}, {"id": "s15", "title": "", "description": "Double-check your work. Once I've gathered the dimension for a location, I go through and double-check the dimension by reading what I've written and pulling the tape a second time. Most errors are resolved at this point.", "notes": ""}, {"id": "s16", "title": "", "description": "It's also a good practice to make a short video that records the dimension along with your verbal description of project specifications.", "notes": ""}]}, {"id": "sec19", "title": "Document", "steps": [{"id": "s18", "title": "", "description": "When you return to the workshop, finalize the process by placing the recordings in the appropriate folder, including scans of handwritten notes, images and videos.", "notes": ""}]}], "relatedProcesses": [], "author": "Imported from Technical Manual", "createdAt": "2026-06-10T00:00:00Z", "lastEditedBy": "Imported from Technical Manual", "lastEditedAt": "2026-06-10T00:00:00Z"}, {"id": "p-rebar", "title": "Rebar", "category": "fabrication", "subcategory": "", "status": "Draft", "summary": "Order of operations for fabricating, finishing and attaching rebar to a panel.", "materials": [], "safety": "", "sections": [{"id": "sec28", "title": "Order of Operations", "steps": [{"id": "s20", "title": "Length", "description": "LENGTH: Measure light + light and add 1/4\". Rebar extends 1/8\" onto perimeter material.", "notes": ""}, {"id": "s21", "title": "Top Corners", "description": "TOP CORNERS: Three ways to shape the rebar ends — flat right angles; 1/4\" round off; airplane nose.", "notes": ""}, {"id": "s22", "title": "Pre-Solder", "description": "PRE-SOLDER: Lay the bar on the panel and use a Sharpie to mark where the solder joints are located on the bar. Apply solder at those points.", "notes": ""}, {"id": "s23", "title": "Pre-Patina", "description": "PRE-PATINA: Patina the entire bar in two coats. Apply with Scotchbrite pad. Rinse off.", "notes": ""}, {"id": "s24", "title": "Wax", "description": "WAX: Apply wax to the rebar. Wait for it to dry, then buff off the excess.", "notes": ""}, {"id": "s25", "title": "Attach Bar", "description": "ATTACH BAR: Mask off glass around each point of attachment, then solder rebar to panel.", "notes": ""}, {"id": "s26", "title": "Clean Up", "description": "CLEAN UP: Sprinkle sawdust along the rebar. Rub it in with toothbrush to absorb the flux.", "notes": ""}, {"id": "s27", "title": "Final Touch Up", "description": "FINAL TOUCH UP: Apply patina to solder joints with a cotton swab. Apply wax to solder joints with a cotton swab. Buff.", "notes": ""}]}], "relatedProcesses": [], "author": "Imported from Technical Manual", "createdAt": "2026-06-10T00:00:00Z", "lastEditedBy": "Imported from Technical Manual", "lastEditedAt": "2026-06-10T00:00:00Z"}, {"id": "p-restoration", "title": "Restoration", "category": "restoration", "subcategory": "", "status": "Draft", "summary": "Full restoration sequence for a leaded glass panel, from removal through reinstallation.", "materials": [], "safety": "Wear proper PPE (respirator / gloves / hardhat, etc.) during removal and handling to reduce exposure to lead dust. Frequently vacuum work areas with a HEPA vacuum to keep down dust level. Avoid sweeping/brushing. Properly dispose of / recycle old lead and putty.", "sections": [{"id": "sec34", "title": "Removal / Hack Out / Plugs", "steps": [{"id": "s29", "title": "", "description": "Put down drop cloth or 6 mil plastic (OSHA reg.), and vacuum frequently — only use the Festool vac.", "notes": ""}, {"id": "s30", "title": "", "description": "Remove wooden stops.", "notes": ""}, {"id": "s31", "title": "", "description": "For putty bevel: using putty softener tool, 5-in-1 tool, or hackout knife and hammer, chip out the putty bevel.", "notes": ""}, {"id": "s32", "title": "", "description": "If the panel is fixed in the sash with nails around the border, use an old pair of lead dykes or other pry tool to remove.", "notes": ""}, {"id": "s33", "title": "", "description": "Insert lucite or painted plywood plugs into the opening. Use weatherproofing strip or latex glazing caulk as sealant.", "notes": ""}]}, {"id": "sec45", "title": "Rubbings", "steps": [{"id": "s35", "title": "", "description": "Remove rebars and/or copper ties and vacuum panel thoroughly.", "notes": ""}, {"id": "s36", "title": "", "description": "Put distorted or displaced pieces of lead and glass back into place as well as possible.", "notes": ""}, {"id": "s37", "title": "", "description": "Cut white butcher paper or archival vellum a few inches larger than the panel on all sides.", "notes": ""}, {"id": "s38", "title": "", "description": "It is typical to take a rubbing of and rebuild with the interior side up. In the case of heavily jeweled panels, this may vary.", "notes": ""}, {"id": "s39", "title": "", "description": "To secure the paper, hammer glazing nails every 4\"–6\" around the perimeter of the panel into the workbench.", "notes": ""}, {"id": "s40", "title": "", "description": "Use a Dixon lumber crayon carved to a point or Caran d'Ache (archival) to trace edges of lead flanges, including outside edges.", "notes": ""}, {"id": "s41", "title": "", "description": "Mark overall dimensions as well as border lead sizes, notation of any shaving, lead sizes and profiles, and placement of detail.", "notes": ""}, {"id": "s42", "title": "", "description": "Mark condition issues: broken joints, bowing, glass breaks, missing glass, replacements, etc.", "notes": ""}, {"id": "s43", "title": "", "description": "Make a legend of notations and color coding with markers, crayons, etc. (Sakura Pigma pens are archival).", "notes": ""}, {"id": "s44", "title": "", "description": "Place cut sheet plastic on rubbing to put glass pieces on during dismantling.", "notes": ""}]}, {"id": "sec52", "title": "Dismantling", "steps": [{"id": "s46", "title": "", "description": "Where no fragile glass paint is present, dismantle either after misting or underwater to keep down dust.", "notes": ""}, {"id": "s47", "title": "", "description": "Wear respirator to reduce lead dust exposure during handling, or if not dismantling underwater.", "notes": ""}, {"id": "s48", "title": "", "description": "Use old lead dykes to cut old lead, and a flat razor scraper and Scotchbrite pad to clean old putty off.", "notes": ""}, {"id": "s49", "title": "", "description": "It can be helpful to cut all joints on the back side of the panel before beginning dismantle.", "notes": ""}, {"id": "s50", "title": "", "description": "Save even tiny fragments of broken glass and place them in the proper place (for gluing).", "notes": ""}, {"id": "s51", "title": "", "description": "Once dry, tape together glass fragments and number each broken piece; put the number accordingly in place on the sheet plastic.", "notes": ""}]}, {"id": "sec54", "title": "Glass Match / Search", "steps": [{"id": "s53", "title": "", "description": "", "notes": ""}]}, {"id": "sec56", "title": "Glass Cut", "steps": [{"id": "s55", "title": "", "description": "If the original piece of glass cannot be well-taped together to use as a template, use the rubbing as a guide to cut the replacement.", "notes": ""}]}, {"id": "sec58", "title": "Hxtal Epoxy", "steps": [{"id": "s57", "title": "", "description": "See the Hxtal process.", "notes": ""}]}, {"id": "sec60", "title": "Assembly (Relead / Solder)", "steps": [{"id": "s59", "title": "", "description": "", "notes": ""}]}, {"id": "sec62", "title": "Finishing (Putty / Polish / Detail)", "steps": [{"id": "s61", "title": "", "description": "See the Finishing process.", "notes": ""}]}, {"id": "sec65", "title": "Rebar / Rehab (if to be reused)", "steps": [{"id": "s63", "title": "", "description": "Rust removal.", "notes": ""}, {"id": "s64", "title": "", "description": "Repaint with Rustoleum.", "notes": ""}]}, {"id": "sec67", "title": "Install", "steps": [{"id": "s66", "title": "", "description": "", "notes": ""}]}], "relatedProcesses": ["p-hxtal", "p-finishing", "p-rebar"], "author": "Imported from Technical Manual", "createdAt": "2026-06-10T00:00:00Z", "lastEditedBy": "Imported from Technical Manual", "lastEditedAt": "2026-06-10T00:00:00Z"}, {"id": "p-hxtal", "title": "Hxtal Preparation Protocol", "category": "restoration", "subcategory": "", "status": "Draft", "summary": "Mixing and applying Hxtal NYL-1 epoxy (3:1) to repair a crack in glass.", "materials": ["Scale with 0.01g accuracy", "Hxtal NYL-1 (A Resin + B Hardener)", "Acetone", "Toothpick", "Cotton balls", "Exacto knife", "Gloves", "Small cup (film canister or prescription bottle)"], "safety": "", "sections": [{"id": "sec73", "title": "Mixing Quantities (3:1 by weight)", "steps": [{"id": "s68", "title": "", "description": "A Resin (3 parts) / B Hardener (1 part) / Total grams: 0.225 / 0.075 / 0.3", "notes": ""}, {"id": "s69", "title": "", "description": "0.375 / 0.125 / 0.5", "notes": ""}, {"id": "s70", "title": "", "description": "0.75 / 0.25 / 1.0", "notes": ""}, {"id": "s71", "title": "", "description": "1.125 / 0.375 / 1.5", "notes": ""}, {"id": "s72", "title": "", "description": "1.5 / 0.5 / 2.0", "notes": ""}]}, {"id": "sec79", "title": "Preparation and Mixing", "steps": [{"id": "s74", "title": "", "description": "Place cup or canister on scale, then TARE.", "notes": ""}, {"id": "s75", "title": "", "description": "Add A resin slowly to the container. Use a toothpick and scoop/twirl like taking honey out of a jar. The resin is thicker when cold.", "notes": ""}, {"id": "s76", "title": "", "description": "Once quantity is reached, TARE for measuring B hardener.", "notes": ""}, {"id": "s77", "title": "", "description": "Add B hardener slowly to the container, drop by drop. You can use a toothpick to control the size of the drop.", "notes": ""}, {"id": "s78", "title": "", "description": "Mix with toothpick thoroughly, ensuring you scrape the sides and bottom of the container. The Hxtal will not set if it isn't mixed thoroughly.", "notes": ""}]}, {"id": "sec82", "title": "Glass Surface Preparation", "steps": [{"id": "s80", "title": "", "description": "Clean surrounding glass surface with acetone. Take a toothpick and wrap a small piece of cotton around one end, creating a swab.", "notes": ""}, {"id": "s81", "title": "", "description": "Once surface is clean, place clear tape on the back side of the crack, burnishing all air bubbles out of the tape.", "notes": ""}]}, {"id": "sec89", "title": "Hxtal Application", "steps": [{"id": "s83", "title": "", "description": "Using a clean toothpick, pick up a drop of Hxtal and place on the non-tape surface at the beginning of the crack. Slowly continue along the crack.", "notes": ""}, {"id": "s84", "title": "", "description": "Apply Hxtal until the full crack is covered, leaving an excess Hxtal bead on the surface.", "notes": ""}, {"id": "s85", "title": "", "description": "Wait 30 minutes for the Hxtal to fall into the crack. You will see the bead flatten.", "notes": ""}, {"id": "s86", "title": "", "description": "Using a clean cotton swab, slowly roll/wipe the remaining Hxtal from the surface. Use a clean swab for each wipe.", "notes": ""}, {"id": "s87", "title": "", "description": "Using a clean cotton swab, carefully apply acetone to the sides of the crack to remove any residue. Acetone will dissolve uncured Hxtal.", "notes": ""}, {"id": "s88", "title": "", "description": "Remove tape after 4 days of curing.", "notes": ""}]}], "relatedProcesses": [], "author": "Imported from Technical Manual", "createdAt": "2026-06-10T00:00:00Z", "lastEditedBy": "Imported from Technical Manual", "lastEditedAt": "2026-06-10T00:00:00Z"}, {"id": "p-patination", "title": "Patination (Zinc Patina Method)", "category": "fabrication", "subcategory": "", "status": "Draft", "summary": "Applying Novocan zinc and lead/solder patina to came and joints, then waxing and detailing.", "materials": ["Vacuum", "Acetone", "Soapy water", "Maroon 3M pads", "Rags", "Small plastic containers", "Cotton balls", "Q-tips", "Terry cloth rag"], "safety": "", "sections": [{"id": "sec95", "title": "Preparation", "steps": [{"id": "s90", "title": "", "description": "Using Novocan Zinc Patina for the main part of the came, Novocan lead/solder patina for joints.", "notes": ""}, {"id": "s91", "title": "", "description": "Start on a clean surface / work area.", "notes": ""}, {"id": "s92", "title": "", "description": "Work on the back first, so when that's done, all your work will be on the front — and it's less likely to be marred in the process.", "notes": ""}, {"id": "s93", "title": "", "description": "Vacuum entire surface.", "notes": ""}, {"id": "s94", "title": "", "description": "Use acetone on a rag to remove any grease from the came and joints.", "notes": ""}]}, {"id": "sec100", "title": "Abrade — in approx. square-foot sections", "steps": [{"id": "s96", "title": "", "description": "Use a maroon 3M pad cut down to approx. 2\" square to abrade the surface of the zinc came, including flange edges, and especially around joints.", "notes": ""}, {"id": "s97", "title": "", "description": "Take care to avoid scratching the surface of the glass.", "notes": ""}, {"id": "s98", "title": "", "description": "Use a new part of the maroon pad, or a new pad, if it loses abrasiveness.", "notes": ""}, {"id": "s99", "title": "", "description": "Vacuum and acetone to remove any zinc residue or grease.", "notes": ""}]}, {"id": "sec106", "title": "Pretreat Joints", "steps": [{"id": "s101", "title": "", "description": "Decant a small amount of each type of patina and soapy water into separate plastic containers.", "notes": ""}, {"id": "s102", "title": "", "description": "Pretreat joints with lead/solder patina on a Q-tip.", "notes": ""}, {"id": "s103", "title": "", "description": "Use a fresh part of the Q-tip for each joint; avoid areas of the Q-tip with coppery oxidation, which will make the patina color too light and coppery.", "notes": ""}, {"id": "s104", "title": "", "description": "Avoid getting the lead/solder patina on the zinc came.", "notes": ""}, {"id": "s105", "title": "", "description": "Let dry.", "notes": ""}]}, {"id": "sec115", "title": "Apply Zinc Patina to Came", "steps": [{"id": "s107", "title": "", "description": "Begin by applying zinc patina with a cotton ball to the borders.", "notes": ""}, {"id": "s108", "title": "", "description": "Soak the cotton ball in patina and then mostly squeeze out.", "notes": ""}, {"id": "s109", "title": "", "description": "Steadily apply the patina to the surface of the came, making sure to get the side edge of the flange.", "notes": ""}, {"id": "s110", "title": "", "description": "It can help to bring your eye level down to better control the flow and avoid getting too much patina on the surface of the glass (harder to clean later).", "notes": ""}, {"id": "s111", "title": "", "description": "Use clean sections of the cotton to ensure good patina cover.", "notes": ""}, {"id": "s112", "title": "", "description": "Where necessary, go back and forth over sections that did not take the patina.", "notes": ""}, {"id": "s113", "title": "", "description": "Let dry.", "notes": ""}, {"id": "s114", "title": "", "description": "Apply second coat.", "notes": ""}]}, {"id": "sec119", "title": "Clean Off Excess Patina", "steps": [{"id": "s116", "title": "", "description": "Use very slightly soapy water applied in a few passes with a wrung-out sponge over the entire surface of the panel.", "notes": ""}, {"id": "s117", "title": "", "description": "Try to remove as much water as possible with sponge, cotton balls, or rag.", "notes": ""}, {"id": "s118", "title": "", "description": "After cleaning, touch up joints or missing areas of patina where necessary. Sometimes this requires 3M'ing first.", "notes": ""}]}, {"id": "sec122", "title": "Waxing", "steps": [{"id": "s120", "title": "", "description": "Once the panel is totally dry, apply wax using a small rag; after a few minutes buff out the wax using a terry cloth rag.", "notes": ""}, {"id": "s121", "title": "", "description": "Where necessary, touch up joints or missing areas of patina. Sometimes this requires 3M'ing first.", "notes": ""}]}, {"id": "sec126", "title": "Detailing", "steps": [{"id": "s123", "title": "", "description": "Remove any residue or grease from the glass surface with a dry rag, cotton ball, or Q-tip.", "notes": ""}, {"id": "s124", "title": "", "description": "Pick away any excess putty, especially from tight corners.", "notes": ""}, {"id": "s125", "title": "", "description": "Useful to use a dry natural bristle brush around joints and corners.", "notes": ""}]}, {"id": "sec132", "title": "Reminders", "steps": [{"id": "s127", "title": "", "description": "USE COTTON BALLS.", "notes": ""}, {"id": "s128", "title": "", "description": "DON'T reapply patina with a used cotton ball.", "notes": ""}, {"id": "s129", "title": "", "description": "DON'T double dip with a used cotton ball — that corrupts the patina.", "notes": ""}, {"id": "s130", "title": "", "description": "Pour small amounts of patina into clean containers.", "notes": ""}, {"id": "s131", "title": "", "description": "NEVER reuse a container without washing with soap and drying.", "notes": ""}]}], "relatedProcesses": [], "author": "Imported from Technical Manual", "createdAt": "2026-06-10T00:00:00Z", "lastEditedBy": "Imported from Technical Manual", "lastEditedAt": "2026-06-10T00:00:00Z"}, {"id": "p-patina-removal", "title": "Patina Removal from Zinc", "category": "fabrication", "subcategory": "", "status": "Draft", "summary": "Removing patina from a zinc surface with progressively finer steel wool, then re-waxing.", "materials": [], "safety": "", "sections": [{"id": "sec142", "title": "", "steps": [{"id": "s133", "title": "", "description": "Tape surfaces that are not being removed.", "notes": ""}, {"id": "s134", "title": "", "description": "Use acetone on a tee-shirt rag to remove wax from the surface.", "notes": ""}, {"id": "s135", "title": "", "description": "Confirm the glass will not be scratched before using steel wool.", "notes": ""}, {"id": "s136", "title": "", "description": "Use #1 steel wool to remove patina from the surface. Use basic pressure to abrade the surface until most patina is removed.", "notes": ""}, {"id": "s137", "title": "", "description": "Use #000 steel wool to remove remaining patina and vacuum particles.", "notes": ""}, {"id": "s138", "title": "", "description": "Use #0000 steel wool to detail-clean any remaining patina. This will buff out scratches on the zinc surface.", "notes": ""}, {"id": "s139", "title": "", "description": "Vacuum steel wool particles throughout the process and before changing grits.", "notes": ""}, {"id": "s140", "title": "", "description": "Clean surface with acetone on a tee-shirt rag.", "notes": ""}, {"id": "s141", "title": "", "description": "Wax with a tee-shirt rag and buff with a microfiber cloth.", "notes": ""}]}], "relatedProcesses": [], "author": "Imported from Technical Manual", "createdAt": "2026-06-10T00:00:00Z", "lastEditedBy": "Imported from Technical Manual", "lastEditedAt": "2026-06-10T00:00:00Z"}, {"id": "p-plating", "title": "Plating", "category": "fabrication", "subcategory": "", "status": "Draft", "summary": "Placeholder — process not yet documented.", "materials": [], "safety": "", "sections": [{"id": "sec144", "title": "", "steps": [{"id": "s143", "title": "", "description": "", "notes": ""}]}], "relatedProcesses": [], "author": "Imported from Technical Manual", "createdAt": "2026-06-10T00:00:00Z", "lastEditedBy": "Imported from Technical Manual", "lastEditedAt": "2026-06-10T00:00:00Z"}, {"id": "p-finishing", "title": "Finishing", "category": "fabrication", "subcategory": "", "status": "Draft", "summary": "Puttying and chemical patination to finish a leaded panel. Includes putty background, application/removal, and zinc patination.", "materials": ["Vacuum", "Acetone", "Soapy water", "Maroon 3M Scotch-Brite 7447 pads", "Cotton rags or towels", "Small plastic containers", "Sponge", "Cotton balls", "Q-tips", "Terry cloth rag (for buffing wax)", "Novocan Black Patina for Zinc", "Novocan Black Patina for Solder & Lead", "Paste wax (e.g. Johnson's)"], "safety": "If you're not getting acceptable, consistent results, STOP and seek guidance.", "sections": [{"id": "sec152", "title": "Putty — Background", "steps": [{"id": "s145", "title": "", "description": "For most craftspeople, standard off-the-shelf glazing putty is recommended. Mixing your own can be messy and requires ingredients that are not easily sourced. Buy only as much as you need since it will harden if left too long.", "notes": ""}, {"id": "s146", "title": "", "description": "The below is Putty 101, originally written about 30 years ago and posted over the years on stained-glass forums. Updated 2018 by Vic Rothman.", "notes": ""}, {"id": "s147", "title": "", "description": "Putty is made up of two basic ingredients: whiting and linseed oil. People add various things to the basic mix, broken into four categories — 1) Powders: whiting, plaster of paris, dental plaster, field plaster, portland cement. 2) Liquids: raw linseed oil, boiled linseed oil. 3) Thinners: mineral spirits, paint thinner, kerosene, white spirits, gasoline, turpentine. 4) Driers: white lead, red lead, Japan drier.", "notes": ""}, {"id": "s148", "title": "", "description": "Powders add bulk. Whiting should be used alone. Plaster absorbs moisture (the number-one killer of building materials). Portland cement is so strong it attaches itself to the glass, making restoration very difficult — plaster and portland cement are NOT good. Liquids turn the whiting into putty. Thinners make the mix more liquid for brush work, but evaporate quickly and shorten putty life. Driers speed setting; white and red lead are now illegal in the US. For putty to work well it needs to stay elastic as long as possible — that's why thinners and driers aren't ideal. Problems can damage a window over 25+ years; nothing happens in the first few years.", "notes": ""}, {"id": "s149", "title": "", "description": "Inland cement, Miracle Mudd and other putties contain some not-recommended ingredients. In the short term they all work, but if you want your work to last, they should be avoided.", "notes": ""}, {"id": "s150", "title": "", "description": "Vic Rothman's recipe: whiting — 3 parts 25 microns, 1 part 3 microns, about 5% talc of total powder; 49.5% boiled linseed oil, 49.5% raw linseed oil, 1% tall oil (surfactant); black cement color to taste. Tall oil helps mix the oil and powders; talc removes stickiness. Place the liquid in a mixer and slowly add the powder. If making only enough for one job, increase boiled linseed oil to 75%.", "notes": ""}, {"id": "s151", "title": "", "description": "At our workshop we make a version of this putty and simply use 'whiting' purchased from a ceramics supplier. We don't get into the microns, and don't use talc, raw linseed oil, or tall oil. We use lamp black, but have used cement color too.", "notes": ""}]}, {"id": "sec161", "title": "Putty — Application and Removal", "steps": [{"id": "s153", "title": "", "description": "Putty can be applied by hand and pushed under the lead, or with a small fingernail brush. Use new sawdust for each step — discard the old and clean the workspace so you don't spoil finished work.", "notes": ""}, {"id": "s154", "title": "", "description": "Start on the back side and apply throughout, paying attention to ensure there are no voids.", "notes": ""}, {"id": "s155", "title": "", "description": "Sprinkle with sawdust and scrub with your palm. The friction with the sawdust will remove much of the excess putty. Brush off the fouled sawdust and discard.", "notes": ""}, {"id": "s156", "title": "", "description": "With a sharpened dowel 'pencil', trace along each lead line to clear away the buildup.", "notes": ""}, {"id": "s157", "title": "", "description": "Apply a light dusting of sawdust and lightly brush the entire surface. You're not trying to clean the window yet — you want the fine sawdust to soak up the oils from the freshly exposed putty.", "notes": ""}, {"id": "s158", "title": "", "description": "Flip and repeat.", "notes": "Can be good to lay down a little sawdust on the surface you're working with."}, {"id": "s159", "title": "", "description": "Once the front has had its second dusting, flip over and brush off the back. Pencil again, dust again, and brush again until the glass has no oily film and the lead intersections are clear of excess putty.", "notes": "Always clean the center of glass pieces before moving to the edges; cleaning the edges first may lead them to become dirty again."}, {"id": "s160", "title": "", "description": "Flip and repeat to the front. We start on the back so that when the front's final cleaning is done it can be left to set up, and the pristine finish won't be fouled while finishing the secondary side.", "notes": "Panel should be free of oil before the rotary brushing process begins. If cleaning after rotary brushing, use Q-tips if patina is not fully dry; however, sawdust and natural bristle brushes are far more effective."}]}, {"id": "sec178", "title": "Chemical Patination", "steps": [{"id": "s162", "title": "", "description": "Using Novocan Black Patina for Zinc for the main part of the zinc came, and Novocan Black Patina for Solder & Lead for solder joints. (Sometimes pretreating the joints with the solder/lead patina is best; other times you only need to touch up selectively after patination of the zinc.)", "notes": ""}, {"id": "s163", "title": "", "description": "Start on a clean surface / work area.", "notes": ""}, {"id": "s164", "title": "", "description": "Work on the back first, so when that's done all your work will be on the front and it's less likely to be marred in the process.", "notes": ""}, {"id": "s165", "title": "", "description": "Vacuum entire surface.", "notes": ""}, {"id": "s166", "title": "", "description": "Use acetone on a rag to remove any grease from the came and joints.", "notes": ""}, {"id": "s167", "title": "", "description": "In approximately square-foot sections: use a maroon 3M pad cut down to ~2\" square to abrade the surface of the zinc came, including flange edges and especially around joints. Avoid scratching the glass. Use a new part of the pad if it loses abrasiveness.", "notes": "Important to vacuum before acetone — metal shavings can clump in corners if they get acetoned."}, {"id": "s168", "title": "", "description": "Decant a small amount of each type of patina and soapy water into separate plastic containers (label these so you don't mix up your patinas).", "notes": ""}, {"id": "s169", "title": "", "description": "Pretreat joints with the solder/lead patina on a Q-tip (or use the same technique for touch-ups after zinc patination). Use a fresh part of the Q-tip for each joint; avoid coppery-oxidized areas. Avoid getting solder/lead patina on the zinc came. Let dry.", "notes": "Lead patina should probably always come after zinc patina — zinc patina removes lead patina much more quickly than the inverse."}, {"id": "s170", "title": "", "description": "Patina the zinc came. IMPORTANT: never pour decanted patina back into the original bottle, as it can contaminate the whole batch. Never dip a used cotton ball or Q-tip back in the decanted solution. Use clean sections to ensure a dark, even patina.", "notes": ""}, {"id": "s171", "title": "", "description": "Begin by applying zinc patina with a cotton ball to the borders. Soak the cotton ball and mostly squeeze out. Steadily apply to the came, getting the side edge of the flange — you should not see any more silver of the zinc.", "notes": ""}, {"id": "s172", "title": "", "description": "Bring your eye level to the panel to control the flow and avoid too much patina on the glass.", "notes": "Applying more pressure can yield better results."}, {"id": "s173", "title": "", "description": "Where necessary, go back and forth over sections that did not take the patina. Let dry. Apply a second coat and let dry.", "notes": "Watch for browning areas. If an area is becoming too brown, it's probably overworked and should often be left alone so as not to progress the discoloration."}, {"id": "s174", "title": "", "description": "Clean off excess patina. Use very slightly soapy water in a few passes with a wrung-out sponge over the entire surface.", "notes": "Be mindful of patina/water marks — they can be harder to remove than oil or putty."}, {"id": "s175", "title": "", "description": "Try to remove as much water as possible with sponge, cotton balls, or rag/towel. After cleaning, touch up joints or missing areas of patina. Sometimes this requires 3M'ing first.", "notes": ""}, {"id": "s176", "title": "", "description": "Waxing (we generally use Johnson's paste wax, but any clear paste wax will do): once the panel is totally dry, apply wax to the zinc surface using a small rag on a fingertip.", "notes": "Be mindful to avoid getting wax on the glass."}, {"id": "s177", "title": "", "description": "Let dry for a few minutes, then buff out the wax using a terry cloth rag. Touch up joints or missing patina where necessary; sometimes this requires 3M'ing first.", "notes": "It is much easier to apply lead patina through wax than zinc patina. Always acetone a surface before applying zinc patina; not always needed with lead patina."}]}, {"id": "sec182", "title": "Detailing", "steps": [{"id": "s179", "title": "", "description": "Remove any residue or grease from the glass surface with a dry rag, cotton ball, or Q-tip.", "notes": "Panel should be mostly clean before rotary brushing, then allowed to dry so patina isn't disturbed by cleaning."}, {"id": "s180", "title": "", "description": "Pick away any excess putty using a skewer or dental tool, especially from tight corners.", "notes": ""}, {"id": "s181", "title": "", "description": "It's useful to use a dry natural bristle brush around joints and corners.", "notes": ""}]}], "relatedProcesses": ["p-patination"], "author": "Imported from Technical Manual", "createdAt": "2026-06-10T00:00:00Z", "lastEditedBy": "Imported from Technical Manual", "lastEditedAt": "2026-06-10T00:00:00Z"}, {"id": "p-mosaic-honing", "title": "Mosaic Honing", "category": "mosaic", "subcategory": "", "status": "Draft", "summary": "Four-step wet honing of a mosaic surface, from glossy to polished finish.", "materials": [], "safety": "", "sections": [{"id": "sec189", "title": "", "steps": [{"id": "s183", "title": "", "description": "Honing is done in four steps: 100 wet resin disc to remove most of the glossy layer, then 200 wet resin disc, 400 wet resin disc, and a finishing polishing wet/dry disc.", "notes": ""}, {"id": "s184", "title": "", "description": "Before starting, make sure the mosaic is completely free of sand by brushing and rinsing off with water.", "notes": ""}, {"id": "s185", "title": "", "description": "After the first pass with the 100 wet resin disc, use a towel to dry the mosaic, then use a black Inkzall pen to mark all glossy spots.", "notes": ""}, {"id": "s186", "title": "", "description": "After removing all the black Inkzall pen marks with the 200 wet resin disc, dry the mosaic and repeat the process (mark glossy spots, remove with the 400 disc).", "notes": ""}, {"id": "s187", "title": "", "description": "With the final wet-disc pass you should not see any more glossy spots; the piece should be completely honed and smooth.", "notes": ""}, {"id": "s188", "title": "", "description": "The final pass with the polishing wet/dry disc removes any small scratches and gives it the finish.", "notes": ""}]}], "relatedProcesses": [], "author": "Imported from Technical Manual", "createdAt": "2026-06-10T00:00:00Z", "lastEditedBy": "Imported from Technical Manual", "lastEditedAt": "2026-06-10T00:00:00Z"}, {"id": "p-mosaic-mounting", "title": "Mosaic Mounting", "category": "mosaic", "subcategory": "", "status": "Draft", "summary": "Mounting a mosaic to backerboard with sand-packed joints and cement or silicone, through to honing prep.", "materials": [], "safety": "Wear a respirator while combing sand into the joints.", "sections": [{"id": "sec203", "title": "", "steps": [{"id": "s190", "title": "", "description": "Note: a fuller version of this process lives in a Google Doc — content to be merged once the format is set.", "notes": "https://docs.google.com/document/d/16s52YCiynOnv6UQQfQXB2AZbROXlh_Mp9dGdNRsEklY/edit?usp=sharing"}, {"id": "s191", "title": "", "description": "Once the glass is set on the contact paper: remove the ledgers used for assembly so the mosaic is alone on the tabletop. Use the stock dam glass we've cut to surround the perimeter — the dams keep the sand from running out of the joints.", "notes": ""}, {"id": "s192", "title": "", "description": "Cover the entire surface with tile tape. Use the roll that ensures the fewest joints and least waste. For larger projects, two people should apply the tape to minimize creases. Cut out and patch any creased areas. The taped surface needs to be as flat as possible; don't stretch the tape as it's applied (this leads to shrinkage).", "notes": ""}, {"id": "s193", "title": "", "description": "Trim the tile tape right up to the edge of the dam.", "notes": ""}, {"id": "s194", "title": "", "description": "Cut the contact paper around the perimeter so the under-platform will remove cleanly.", "notes": ""}, {"id": "s195", "title": "", "description": "Flip the mosaic and remove the contact paper. For large pieces, all flipping is done with the sandwich process where lightweight plywood supports the mosaic. Make sure all pieces are set flat against the table surface.", "notes": ""}, {"id": "s196", "title": "", "description": "Set a ledger to ensure the long face is straight AND to have a surface against which to register the siliconed backerboard.", "notes": ""}, {"id": "s197", "title": "", "description": "Make sure the backerboard is accurately cut and oriented so when it's covered in silicone there is no question which side is set against the ledger.", "notes": ""}, {"id": "s198", "title": "", "description": "Carefully clean the back of the mosaic to remove any film from production or the contact paper. The fine powder from the sand will coat this and inhibit the bond.", "notes": ""}, {"id": "s199", "title": "", "description": "Assume the mosaic is now out of square from moving. Nudge it back to square and secure with 1/8\" low-profile stops micro-pinned into place. For large projects use a material about equal to the overall thickness of the assembly.", "notes": ""}, {"id": "s200", "title": "", "description": "When the mosaic is cut, we assemble it on the tabletop with the back of the glass against the contact paper, then tile-tape it in that arrangement. When flipped, assume the glass is all flat on the now-up side. Apply pressure to each piece to realign it with the tabletop so the visible face is as flat as possible.", "notes": ""}, {"id": "s201", "title": "", "description": "While wearing a respirator, carefully comb sand into the joints. Remove excess with a soft bristle brush. Transfer clean sand back into the container.", "notes": ""}, {"id": "s202", "title": "", "description": "At the same time, one person butters the backerboard and one butters the mosaic back. Time this so it's done together — the surfaces must be joined as soon as possible to avoid curing of either face.", "notes": ""}]}, {"id": "sec208", "title": "When Using Cement", "steps": [{"id": "s204", "title": "", "description": "If the glass is at all translucent, the backerboard cement should be troweled flat: apply a bead on the leading edge of the trowel and use that amount to 'tool' the cement rather than the trowel itself. Strive to have the same amount on your leading edge when done as when you started.", "notes": ""}, {"id": "s205", "title": "", "description": "If the glass is opaque, it's OK to leave standing grooves.", "notes": ""}, {"id": "s206", "title": "", "description": "If the mosaic uses large grout joints (greater than 1/16\"), do not back-butter the glass — cement will fill the grooves and waste time to wire-brush out after it sets.", "notes": ""}, {"id": "s207", "title": "", "description": "All glass types (translucent and opaque) should be back-buttered when using silicone.", "notes": ""}]}, {"id": "sec216", "title": "Join, Set, and Hone Prep", "steps": [{"id": "s209", "title": "", "description": "Join both surfaces and apply pressure to the backerboard through a broad piece of wood to distribute pressure evenly. Bare hands push inconsistently, and each inconsistency translates to the overall thickness — for a honed mosaic this greatly increases polishing time.", "notes": ""}, {"id": "s210", "title": "", "description": "If a large mosaic is applied onto multiple pieces of backerboard and cut apart after mounting, use a wide piece of wood to bridge the underlying backerboard when pushing down. This keeps the edges level for final installation.", "notes": ""}, {"id": "s211", "title": "", "description": "Carefully flip the mosaic to avoid uneven pressure that would deform the surface. Allow to set 4–6 hours to overnight depending on temperature. To test, carefully lift the tape on an insignificant corner.", "notes": ""}, {"id": "s212", "title": "", "description": "Once set for 48 hours, remove the tape and dump the sand onto a paper sheet so it can be collected and poured back into the carton.", "notes": ""}, {"id": "s213", "title": "", "description": "For honed work, thoroughly brush and vacuum the sanded joints to remove grains that could dislodge during honing and mar the surface.", "notes": ""}, {"id": "s214", "title": "", "description": "Any high points of cement need to be removed prior to honing.", "notes": ""}, {"id": "s215", "title": "", "description": "Honing is done in three steps: 200 wet resin disc, 400 wet resin disc, and finished with a 400 wet/dry disc with water.", "notes": ""}]}], "relatedProcesses": ["p-mosaic-honing"], "author": "Imported from Technical Manual", "createdAt": "2026-06-10T00:00:00Z", "lastEditedBy": "Imported from Technical Manual", "lastEditedAt": "2026-06-10T00:00:00Z"}, {"id": "p-fireplace-frame", "title": "Mosaic Fireplace Frame", "category": "mosaic", "subcategory": "", "status": "Draft", "summary": "Fabricating a brass firebox frame and applying a patina finish.", "materials": [], "safety": "Be sure to completely turn off the fuel after soldering.", "sections": [{"id": "sec227", "title": "Making a Brass Firebox Frame", "steps": [{"id": "s217", "title": "", "description": "Using either 3/4\" or 1\" angle.", "notes": ""}, {"id": "s218", "title": "", "description": "Cutting the metal with the chop saw requires two things: a fully supported back wall to cut against, and the metal must be clamped.", "notes": ""}, {"id": "s219", "title": "", "description": "Use the non-ferrous metal blade.", "notes": ""}, {"id": "s220", "title": "", "description": "The success of this process is determined by the accuracy of your marking device. Don't use pencils — only use the marking tool.", "notes": ""}, {"id": "s221", "title": "", "description": "Once cut, the joints need to be cleaned thoroughly.", "notes": ""}, {"id": "s222", "title": "", "description": "The sections need to be arranged so they can be heated from all angles and secured so they won't move. Pay careful attention to alignment.", "notes": ""}, {"id": "s223", "title": "", "description": "Heat the overall area, not just the joint.", "notes": ""}, {"id": "s224", "title": "", "description": "Once there is a moderate amount of heat, apply the solder/flux mixture along the joint.", "notes": ""}, {"id": "s225", "title": "", "description": "Bring the metal up to temperature until the solder flows throughout the joint.", "notes": ""}, {"id": "s226", "title": "", "description": "Be sure to completely turn off the fuel.", "notes": ""}]}, {"id": "sec236", "title": "Brass Fireplace Frame Patina Process", "steps": [{"id": "s228", "title": "", "description": "It's critical to get all sides that will be seen: face, inside face, and outer 1/8\" edges.", "notes": ""}, {"id": "s229", "title": "", "description": "Remove oxidation with Scotch-Brite red.", "notes": ""}, {"id": "s230", "title": "", "description": "Remove any deep scratches with the Festool sander (220 grit).", "notes": ""}, {"id": "s231", "title": "", "description": "Use Scotch-Brite grey (ultra fine) to complete sanding.", "notes": ""}, {"id": "s232", "title": "", "description": "Apply Jax brand black-for-brass patina.", "notes": ""}, {"id": "s233", "title": "", "description": "Wash off with hose when slightly darker than the desired finish.", "notes": ""}, {"id": "s234", "title": "", "description": "Let dry.", "notes": ""}, {"id": "s235", "title": "", "description": "Apply wax.", "notes": ""}]}], "relatedProcesses": ["p-back-filling"], "author": "Imported from Technical Manual", "createdAt": "2026-06-10T00:00:00Z", "lastEditedBy": "Imported from Technical Manual", "lastEditedAt": "2026-06-10T00:00:00Z"}, {"id": "p-mirroring", "title": "Mirroring", "category": "mirroring", "subcategory": "", "status": "Draft", "summary": "Silvering glass to make a mirror: cleaning, application, painting, and water treatment.", "materials": ["Bon Ami", "Distilled water", "Primer / sensitizer", "Two-part silvering solution", "Cerium oxide", "Felt polishing pad", "Black mirror paint", "Foil backing", "Treatment clay powder"], "safety": "Wear gloves and a respirator. Wear a mask for fumes when painting the mirrored surface.", "sections": [{"id": "sec242", "title": "Cleaning", "steps": [{"id": "s237", "title": "", "description": "Use Bon Ami to make a paste on the glass surface and clean all sides and edges.", "notes": ""}, {"id": "s238", "title": "", "description": "Allow to dry and buff with a clean paper towel. Use hot water to eliminate haze and dry with a fresh paper towel.", "notes": ""}, {"id": "s239", "title": "", "description": "Repeat until all water sheets on the glass rather than beading. Listen for the squeak of the paper towel.", "notes": ""}, {"id": "s240", "title": "", "description": "For a perfect mirror you want the glass immaculate. For an antique mirror you don't need to clean as thoroughly.", "notes": ""}, {"id": "s241", "title": "", "description": "The final step should be the spray and wipe-down with the aerosol glass cleaner.", "notes": ""}]}, {"id": "sec251", "title": "Glass Preparation and Cleaning (tank method)", "steps": [{"id": "s243", "title": "", "description": "Attach glass to stretcher by screwing blocks down. ALWAYS keep bottom blocks attached.", "notes": ""}, {"id": "s244", "title": "", "description": "Move to tank. Open clean water valve (trash can). Close dirty water valve (bin).", "notes": ""}, {"id": "s245", "title": "", "description": "Wet glass with tap water.", "notes": ""}, {"id": "s246", "title": "", "description": "Dissolve powder cleaner with hot water in a container (quantities TBD).", "notes": ""}, {"id": "s247", "title": "", "description": "Pour powder-cleaner water on glass and use a sponge to gently clean the surface. Prop glass on frame and rinse with tempered tap water.", "notes": ""}, {"id": "s248", "title": "", "description": "Lay glass flat. Sprinkle with cerium oxide and add tap water to create a milky consistency. Firmly polish the glass with a felt pad and the cerium oxide mixture.", "notes": ""}, {"id": "s249", "title": "", "description": "Prop glass on frame and rinse with tap water. Clean water from the surface using a squeegee. Ensure all cerium oxide is removed.", "notes": ""}, {"id": "s250", "title": "", "description": "Final rinse with distilled water. Drain tank. Close clean water valve when the tank finishes draining; open dirty water valve.", "notes": ""}]}, {"id": "sec262", "title": "Application", "steps": [{"id": "s252", "title": "", "description": "Lay glass flat. Spray with distilled water, covering thoroughly.", "notes": ""}, {"id": "s253", "title": "", "description": "Spray sensitizer over the entire surface, covering thoroughly. Wait 30 seconds.", "notes": ""}, {"id": "s254", "title": "", "description": "Prop up on frame and rinse off all sensitizer with distilled water. Lay flat.", "notes": ""}, {"id": "s255", "title": "", "description": "Spray silver with the double sprayer, using some movement to create an uneven pattern. As the mirror develops, add more where needed. Remain flat and rinse with tap water to stop chemical development.", "notes": ""}, {"id": "s256", "title": "", "description": "Prop up on frame and rinse again with tap water. Final rinse with distilled water — three rinses total.", "notes": ""}, {"id": "s257", "title": "", "description": "Move glass on stretcher outside to dry in the sun.", "notes": ""}, {"id": "s258", "title": "", "description": "Clear mirror basin with tap water, draining fully into dirty water bins. Drain dirty water into 5-gallon buckets for treatment.", "notes": ""}, {"id": "s259", "title": "", "description": "When the surface is fully dry, bring inside and remove from stretcher.", "notes": ""}, {"id": "s260", "title": "", "description": "Paint the mirrored surface with black paint, coating with a thick, even layer. Wear a mask for fumes.", "notes": ""}, {"id": "s261", "title": "", "description": "Once approved by client, cut to size. Apply foil backing to the painted side.", "notes": ""}]}, {"id": "sec264", "title": "Water Treatment Process", "steps": [{"id": "s263", "title": "", "description": "Add 3 oz (1 container) of treatment clay powder into a 5-gallon bucket, stir, and let sit overnight.", "notes": ""}]}], "relatedProcesses": [], "author": "Imported from Technical Manual", "createdAt": "2026-06-10T00:00:00Z", "lastEditedBy": "Imported from Technical Manual", "lastEditedAt": "2026-06-10T00:00:00Z"}, {"id": "p-back-filling", "title": "Back Filling with Mortar in a Firebox", "category": "mosaic", "subcategory": "", "status": "Draft", "summary": "Transitioning from firebox masonry to backerboard with thinset, mortar, and grout — for aesthetics and to seal the space.", "materials": [], "safety": "", "sections": [{"id": "sec273", "title": "", "steps": [{"id": "s265", "title": "", "description": "Wire-brush the brick surface to remove any loose material, getting to a solid surface for bonding.", "notes": ""}, {"id": "s266", "title": "", "description": "Clean with a sponge if necessary, then dry with a rag.", "notes": ""}, {"id": "s267", "title": "", "description": "Mix up a slurry of thinset liquid enough to brush on. This gives the mortar mix something to bond to.", "notes": ""}, {"id": "s268", "title": "", "description": "Tape off a target line so the fill is targeted rather than random. The placement of the line may be selected for aesthetics.", "notes": ""}, {"id": "s269", "title": "", "description": "Mix the mortar so it can go onto the thinset as soon as possible — ideally while the thinset is still wet.", "notes": ""}, {"id": "s270", "title": "", "description": "If there is a large gap, consider using hardware cloth and concrete screws to create an armature for the mortar.", "notes": ""}, {"id": "s271", "title": "", "description": "Let the mortar firm up a bit before the mortar lines can be struck. It should be solid enough that it holds a line.", "notes": ""}, {"id": "s272", "title": "", "description": "Mix up a slurry of black sanded grout and apply with a paintbrush. At this point it's a good idea to remove the tape.", "notes": ""}]}], "relatedProcesses": [], "author": "Imported from Technical Manual", "createdAt": "2026-06-10T00:00:00Z", "lastEditedBy": "Imported from Technical Manual", "lastEditedAt": "2026-06-10T00:00:00Z"}]};
+const STARTER_CATEGORIES = [{"id": "intake", "name": "Intake & Measurement", "color": "#D4793A"}, {"id": "fabrication", "name": "Fabrication", "color": "#5C3D2E"}, {"id": "restoration", "name": "Restoration", "color": "#2A7A6E"}, {"id": "mosaic", "name": "Mosaic", "color": "#1B2838"}, {"id": "mirroring", "name": "Mirroring", "color": "#4A6D7C"}];
+
+const KEY_LIB = 'ted-proc-library';
+const KEY_CAT = 'ted-proc-categories';
+const LS_URL = 'tpl_exec_url';
+const LS_USER = 'tpl_user_name';
+const POLL_MS = 10000;
+const GRACE_MS = 25000;
+
+const state = {
+  view: 'list',
+  execUrl: localStorage.getItem(LS_URL) || '',
+  userName: localStorage.getItem(LS_USER) || '',
+  library: [],
+  categories: [],
+  filter: 'all',
+  query: '',
+  currentId: null,
+  draft: null,
+  loaded: false,
+};
+const grace = {};       // key -> timestamp until which remote changes are ignored
+const lastSeen = {};    // key -> updated_at last applied
+
+const $ = (s,el=document)=>el.querySelector(s);
+const uid = (p='id')=> p+'-'+Date.now().toString(36)+'-'+Math.random().toString(36).slice(2,7);
+const esc = s => (s==null?'':String(s)).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const catById = id => state.categories.find(c=>c.id===id) || {name:'Uncategorized',color:'#9A8E7C'};
+
+/* ---------- backend ---------- */
+function apiRead(){
+  return new Promise((resolve,reject)=>{
+    if(!state.execUrl) return reject('no url');
+    const cb='__tpl_'+Math.random().toString(36).slice(2);
+    const sc=document.createElement('script');
+    const to=setTimeout(()=>{cleanup();reject('timeout');},12000);
+    function cleanup(){clearTimeout(to);delete window[cb];sc.remove();}
+    window[cb]=(res)=>{cleanup();resolve(res);};
+    sc.onerror=()=>{cleanup();reject('network');};
+    sc.src=state.execUrl+(state.execUrl.includes('?')?'&':'?')+'action=read&callback='+cb+'&_t='+Date.now();
+    document.body.appendChild(sc);
+  });
+}
+function apiWrite(key,valueObj){
+  grace[key]=Date.now()+GRACE_MS;
+  setSave('saving');
+  const body=JSON.stringify({key,value:JSON.stringify(valueObj)});
+  return fetch(state.execUrl+(state.execUrl.includes('?')?'&':'?')+'action=write',{
+    method:'POST',mode:'no-cors',headers:{'Content-Type':'text/plain;charset=utf-8'},body
+  }).then(()=>{setSave('saved');}).catch(()=>{setSave('failed');});
+}
+function setSave(s){
+  const el=$('#saveStatus'); if(!el)return;
+  el.className=s;
+  el.querySelector('.lbl').textContent = s==='saving'?'Saving…':s==='saved'?'Saved':s==='failed'?'Save failed':'Synced';
+  if(s==='saved') setTimeout(()=>{const e=$('#saveStatus');if(e&&e.className==='saved'){e.className='';e.querySelector('.lbl').textContent='Synced';}},2500);
+}
+
+/* ---------- load + sync ---------- */
+function applyData(data){
+  let changed=false;
+  if(data[KEY_CAT] && Date.now()>=(grace[KEY_CAT]||0) && data[KEY_CAT].updated_at!==lastSeen[KEY_CAT]){
+    try{ state.categories=JSON.parse(data[KEY_CAT].value)||[]; lastSeen[KEY_CAT]=data[KEY_CAT].updated_at; changed=true; }catch(e){}
+  }
+  if(data[KEY_LIB] && Date.now()>=(grace[KEY_LIB]||0) && data[KEY_LIB].updated_at!==lastSeen[KEY_LIB]){
+    try{ const p=JSON.parse(data[KEY_LIB].value); state.library=p.processes||p||[]; lastSeen[KEY_LIB]=data[KEY_LIB].updated_at; changed=true; }catch(e){}
+  }
+  return changed;
+}
+async function loadAll(){
+  try{
+    const res=await apiRead();
+    if(res&&res.ok){ applyData(res.data||{}); }
+    state.loaded=true; render();
+  }catch(e){ state.loaded=true; render(); }
+}
+async function poll(){
+  if(!state.execUrl) return;
+  try{
+    const res=await apiRead();
+    if(res&&res.ok){
+      const changed=applyData(res.data||{});
+      if(changed && (state.view==='list'||state.view==='detail'||state.view==='categories')) render();
+    }
+  }catch(e){}
+}
+setInterval(poll,POLL_MS);
+
+function saveLibrary(){ return apiWrite(KEY_LIB,{processes:state.library}); }
+function saveCategories(){ return apiWrite(KEY_CAT,state.categories); }
+
+function loadStarter(){
+  state.categories=JSON.parse(JSON.stringify(STARTER_CATEGORIES));
+  state.library=JSON.parse(JSON.stringify(STARTER_LIBRARY.processes));
+  saveCategories(); saveLibrary();
+  toast('Starter library loaded — 14 processes added as drafts');
+  state.view='list'; render();
+}
+
+/* ---------- toast ---------- */
+let toastT;
+function toast(msg){const t=$('#toast');t.textContent=msg;t.classList.add('show');clearTimeout(toastT);toastT=setTimeout(()=>t.classList.remove('show'),2600);}
+
+/* ---------- navigation ---------- */
+function go(view,id){ state.view=view; if(id!==undefined)state.currentId=id; window.scrollTo(0,0); render(); }
+
+/* ============ RENDER ============ */
+function render(){
+  const root=$('#root');
+  if(!state.execUrl){ root.innerHTML=setupHTML(); wireSetup(); return; }
+  root.innerHTML='<div id="app">'+sidebarHTML()+'<main id="main">'+mainHTML()+'</main></div>';
+  wireMain();
+}
+
+function sidebarHTML(){
+  const item=(v,label,icon)=>`<button data-nav="${v}" class="${state.view===v?'active':''}"><span class="dot"></span>${icon} ${label}</button>`;
+  return `<aside id="sidebar">
+    <div class="brand"><div class="name">Theodore Ellison Designs</div><div class="sub">Process Library</div></div>
+    <nav>
+      ${item('list','All Processes','')}
+      ${item('new','New Process','')}
+      ${item('categories','Categories','')}
+      ${item('settings','Settings','')}
+    </nav>
+    <div class="side-foot">
+      <div id="saveStatus"><span class="led"></span><span class="lbl">Synced</span></div>
+    </div>
+  </aside>`;
+}
+
+function mainHTML(){
+  switch(state.view){
+    case 'detail': return detailHTML();
+    case 'new': return formHTML(null);
+    case 'edit': return formHTML(state.currentId);
+    case 'categories': return categoriesHTML();
+    case 'settings': return settingsHTML();
+    default: return listHTML();
+  }
+}
+
+/* ---- list ---- */
+function listHTML(){
+  if(!state.loaded) return `<div class="empty"><p>Loading…</p></div>`;
+  if(state.library.length===0){
+    return `<div class="page-head"><div><div class="eyebrow">Workshop Reference</div><h1>Process Library</h1></div></div>
+    <div class="empty"><h3>Nothing here yet</h3>
+    <p>Load the starter library to bring in the 14 processes from your Technical Manual, each imported as a draft for review. Or start a process from scratch.</p>
+    <button class="btn primary" id="loadStarter">Load starter library (14 processes)</button>
+    <div style="height:10px"></div>
+    <button class="btn" data-nav="new">Start a blank process</button></div>`;
+  }
+  const q=state.query.trim().toLowerCase();
+  const match=p=>{
+    if(state.filter!=='all' && p.category!==state.filter) return false;
+    if(!q) return true;
+    const hay=[p.title,p.summary,catById(p.category).name,(p.materials||[]).join(' '),p.safety,
+      (p.sections||[]).map(s=>s.title+' '+(s.steps||[]).map(st=>st.title+' '+st.description+' '+st.notes).join(' ')).join(' ')
+    ].join(' ').toLowerCase();
+    return hay.includes(q);
+  };
+  const list=state.library.filter(match);
+  const chips=`<div class="chips">
+    <button class="chip ${state.filter==='all'?'active':''}" data-filter="all" ${state.filter==='all'?'style="background:var(--muir)"':''}>All <span class="mono">${state.library.length}</span></button>
+    ${state.categories.map(c=>{const n=state.library.filter(p=>p.category===c.id).length;const on=state.filter===c.id;
+      return `<button class="chip ${on?'active':''}" data-filter="${c.id}" ${on?`style="background:${c.color}"`:''}><span class="cdot" style="background:${c.color}"></span>${esc(c.name)} <span class="mono">${n}</span></button>`}).join('')}
+  </div>`;
+
+  let body='';
+  if(list.length===0){ body=`<div class="empty"><p>No processes match “${esc(state.query)}”.</p></div>`; }
+  else if(state.filter==='all' && !q){
+    body=state.categories.map(c=>{
+      const items=list.filter(p=>p.category===c.id);
+      if(!items.length) return '';
+      return `<div class="cat-group"><h2><span class="cdot" style="background:${c.color}"></span>${esc(c.name)}</h2><div class="cards">${items.map(cardHTML).join('')}</div></div>`;
+    }).join('');
+    const orphan=list.filter(p=>!state.categories.find(c=>c.id===p.category));
+    if(orphan.length) body+=`<div class="cat-group"><h2><span class="cdot" style="background:#9A8E7C"></span>Uncategorized</h2><div class="cards">${orphan.map(cardHTML).join('')}</div></div>`;
+  } else {
+    body=`<div class="cards">${list.map(cardHTML).join('')}</div>`;
+  }
+
+  return `<div class="page-head">
+      <div><div class="eyebrow">Workshop Reference</div><h1>Process Library</h1>
+      <div class="sub-line">${state.library.length} processes · ${state.categories.length} categories</div></div>
+      <button class="btn primary" data-nav="new">+ New Process</button>
+    </div>
+    <div class="toolbar"><div class="search">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <input id="search" placeholder="Search processes, materials, steps…" value="${esc(state.query)}">
+    </div></div>
+    ${chips}${body}`;
+}
+function cardHTML(p){
+  const c=catById(p.category);
+  const steps=(p.sections||[]).reduce((n,s)=>n+(s.steps||[]).filter(st=>st.description||st.title).length,0);
+  return `<div class="card" data-open="${p.id}" style="border-left-color:${c.color}">
+    <div class="ct">${esc(p.title||'Untitled')}</div>
+    <div class="cs">${esc(p.summary||'No summary yet.')}</div>
+    <div class="cmeta"><span class="badge ${p.status}">${p.status}</span><span class="mono">${steps} step${steps===1?'':'s'}</span></div>
+  </div>`;
+}
+
+/* ---- detail ---- */
+function detailHTML(){
+  const p=state.library.find(x=>x.id===state.currentId);
+  if(!p) return `<div class="empty"><p>Process not found.</p><button class="btn" data-nav="list">Back to library</button></div>`;
+  const c=catById(p.category);
+  const mats=(p.materials||[]).filter(m=>m&&m.trim());
+  const sections=(p.sections||[]).filter(s=>(s.steps||[]).some(st=>st.description||st.title)|| (s.title&&s.title.trim()));
+  const related=(p.relatedProcesses||[]).map(id=>state.library.find(x=>x.id===id)).filter(Boolean);
+  const edited = p.lastEditedAt? new Date(p.lastEditedAt).toLocaleDateString(undefined,{year:'numeric',month:'short',day:'numeric'}):'';
+
+  return `<div class="detail" style="--catcolor:${c.color}">
+    <button class="back" data-nav="list">← All processes</button>
+    <div class="detail-head">
+      <div>
+        <div class="eyebrow" style="color:${c.color}">${esc(c.name)}${p.subcategory?' · '+esc(p.subcategory):''}</div>
+        <h1>${esc(p.title)}</h1>
+      </div>
+      <div class="detail-actions">
+        <button class="btn sm" data-print="${p.id}">Print</button>
+        <button class="btn sm" data-edit="${p.id}">Edit</button>
+        <button class="btn sm danger" data-del="${p.id}">Delete</button>
+      </div>
+    </div>
+    <div class="detail-meta"><span class="badge ${p.status}">${p.status}</span>${edited?`<span>Updated ${edited}</span>`:''}${p.author?`<span>· ${esc(p.author)}</span>`:''}</div>
+    ${p.summary?`<p class="lede">${esc(p.summary)}</p>`:''}
+    ${p.safety&&p.safety.trim()?`<div class="block"><div class="safety"><div class="sh">Safety</div>${esc(p.safety)}</div></div>`:''}
+    ${mats.length?`<div class="block"><h3 class="block-h">Materials &amp; Tools</h3><ul class="mats">${mats.map(m=>`<li>${esc(m)}</li>`).join('')}</ul></div>`:''}
+    <div class="block"><h3 class="block-h">Procedure</h3>
+      ${sections.map(s=>{
+        const steps=(s.steps||[]).filter(st=>st.description||st.title);
+        return `<div class="section-block">${s.title&&s.title.trim()?`<h4 class="section-title">${esc(s.title)}</h4>`:''}
+          <ul class="steps">${steps.map(st=>`<li class="step"><div class="num"></div><div class="sbody">
+            ${st.title&&st.title.trim()?`<div class="stitle">${esc(st.title)}</div>`:''}
+            <div class="sdesc">${esc(st.description)||'<span style="color:#bbb">(empty — to be written)</span>'}</div>
+            ${st.notes&&st.notes.trim()?`<div class="snote"><b>Note</b>${esc(st.notes)}</div>`:''}
+          </div></li>`).join('')}</ul></div>`;
+      }).join('')||'<p style="color:var(--muted)">No steps documented yet.</p>'}
+    </div>
+    ${related.length?`<div class="block"><h3 class="block-h">Related Processes</h3><div class="related">${related.map(r=>`<a href="#" data-open="${r.id}">${esc(r.title)} →</a>`).join('')}</div></div>`:''}
+  </div>`;
+}
+
+/* ---- form ---- */
+function blankProcess(){
+  return {id:uid('p'),title:'',category:state.categories[0]?state.categories[0].id:'',subcategory:'',status:'Draft',
+    summary:'',materials:[''],safety:'',
+    sections:[{id:uid('sec'),title:'',steps:[{id:uid('s'),title:'',description:'',notes:''}]}],
+    relatedProcesses:[],author:state.userName||'',createdAt:new Date().toISOString(),lastEditedBy:state.userName||'',lastEditedAt:new Date().toISOString()};
+}
+function formHTML(editId){
+  if(!state.draft){
+    if(editId){ const p=state.library.find(x=>x.id===editId); state.draft=JSON.parse(JSON.stringify(p)); if(!state.draft.materials.length)state.draft.materials=['']; }
+    else state.draft=blankProcess();
+  }
+  const d=state.draft;
+  const catOpts=state.categories.map(c=>`<option value="${c.id}" ${d.category===c.id?'selected':''}>${esc(c.name)}</option>`).join('');
+  const statusOpts=['Draft','Published','Archived'].map(s=>`<option ${d.status===s?'selected':''}>${s}</option>`).join('');
+  const others=state.library.filter(p=>p.id!==d.id);
+  return `<button class="back" data-nav="${editId?'detail':'list'}">← Cancel</button>
+    <div class="page-head"><div><div class="eyebrow">${editId?'Edit Process':'New Process'}</div><h1>${editId?esc(d.title)||'Untitled':'New Process'}</h1></div></div>
+    <div class="form">
+      <div class="field"><label>Title</label><input type="text" id="f-title" value="${esc(d.title)}" placeholder="e.g. Cutting Leaded Came to Length"></div>
+      <div class="row2">
+        <div class="field"><label>Category</label><select id="f-cat">${catOpts}</select></div>
+        <div class="field"><label>Status</label><select id="f-status">${statusOpts}</select></div>
+        <div class="field"><label>Subcategory <span class="hint">(optional)</span></label><input type="text" id="f-sub" value="${esc(d.subcategory)}"></div>
+      </div>
+      <div class="field"><label>Summary <span class="hint">— one sentence for the index</span></label><textarea id="f-summary" style="min-height:48px">${esc(d.summary)}</textarea></div>
+      <div class="field"><label>Materials &amp; Tools</label><div id="mats">${d.materials.map((m,i)=>matRow(m,i)).join('')}</div>
+        <button class="btn sm ghost" id="addMat">+ Add material</button></div>
+      <div class="field"><label>Safety <span class="hint">(optional — PPE, hazards)</span></label><textarea id="f-safety">${esc(d.safety)}</textarea></div>
+
+      <div class="field"><label>Procedure</label><div id="sections">${d.sections.map((s,si)=>sectionEdit(s,si)).join('')}</div>
+        <button class="btn sm ghost" id="addSec">+ Add section</button></div>
+
+      ${others.length?`<div class="field"><label>Related Processes <span class="hint">(optional)</span></label>
+        <div class="rel-grid">${others.map(p=>`<label><input type="checkbox" data-rel="${p.id}" ${d.relatedProcesses.includes(p.id)?'checked':''}>${esc(p.title)}</label>`).join('')}</div></div>`:''}
+
+      <div class="form-foot">
+        <button class="btn primary" id="saveProc">${editId?'Save changes':'Create process'}</button>
+        <button class="btn ghost" data-nav="${editId?'detail':'list'}">Cancel</button>
+        ${editId?'':''}
+      </div>
+    </div>`;
+}
+function matRow(m,i){return `<div class="mat-row"><input type="text" data-mat="${i}" value="${esc(m)}" placeholder="Material or tool"><button class="iconbtn" data-delmat="${i}" title="Remove">×</button></div>`;}
+function sectionEdit(s,si){
+  return `<div class="sec-edit" data-sec="${si}">
+    <div class="sec-edit-head">
+      <span class="mono" style="color:var(--muted);font-size:12px">§${si+1}</span>
+      <input type="text" data-sectitle="${si}" value="${esc(s.title)}" placeholder="Section title (optional — e.g. Preparation)">
+      <button class="iconbtn" data-delsec="${si}" title="Remove section">×</button>
+    </div>
+    <div data-steps="${si}">${s.steps.map((st,sti)=>stepEdit(st,si,sti)).join('')}</div>
+    <button class="btn sm ghost" data-addstep="${si}">+ Add step</button>
+  </div>`;
+}
+function stepEdit(st,si,sti){
+  return `<div class="step-edit" data-step="${si}-${sti}">
+    <div class="se-top"><span class="mono">${sti+1}.</span>
+      <input type="text" data-steptitle="${si}-${sti}" value="${esc(st.title)}" placeholder="Short label (optional)">
+      <button class="iconbtn" data-delstep="${si}-${sti}" title="Remove step">×</button>
+    </div>
+    <textarea data-stepdesc="${si}-${sti}" placeholder="Describe this step…">${esc(st.description)}</textarea>
+    <textarea data-stepnotes="${si}-${sti}" placeholder="Notes (optional — gotchas, tips)" style="min-height:44px">${esc(st.notes)}</textarea>
+  </div>`;
+}
+
+/* ---- categories ---- */
+function categoriesHTML(){
+  return `<div class="page-head"><div><div class="eyebrow">Organization</div><h1>Categories</h1>
+    <div class="sub-line">Used to group and color-code the library.</div></div></div>
+    <div class="form" style="max-width:600px">
+      <div id="catList">${state.categories.map((c,i)=>catEditRow(c,i)).join('')}</div>
+      <button class="btn sm ghost" id="addCat">+ Add category</button>
+      <div class="form-foot"><button class="btn primary" id="saveCats">Save categories</button></div>
+    </div>`;
+}
+function catEditRow(c,i){
+  const inUse=state.library.filter(p=>p.category===c.id).length;
+  return `<div class="cat-edit-row" data-cat="${i}">
+    <input type="color" data-catcolor="${i}" value="${c.color}">
+    <input type="text" data-catname="${i}" value="${esc(c.name)}">
+    <span class="mono" style="color:var(--muted);font-size:12px">${inUse} used</span>
+    <button class="iconbtn" data-delcat="${i}" title="Remove" ${inUse?'disabled style="opacity:.35;cursor:not-allowed"':''}>×</button>
+  </div>`;
+}
+
+/* ---- settings ---- */
+function settingsHTML(){
+  return `<div class="page-head"><div><div class="eyebrow">Settings</div><h1>Settings</h1></div></div>
+  <div class="form" style="max-width:600px">
+    <div class="field"><label>Your name <span class="hint">— stamped on processes you create or edit</span></label>
+      <input type="text" id="f-username" value="${esc(state.userName)}" placeholder="e.g. Ted"></div>
+    <div class="field"><label>Backend URL <span class="hint">— Apps Script /exec endpoint</span></label>
+      <input type="text" id="f-execurl" value="${esc(state.execUrl)}" class="mono" style="font-size:12px"></div>
+    <div class="form-foot"><button class="btn primary" id="saveSettings">Save settings</button></div>
+    <div class="block" style="margin-top:30px">
+      <h3 class="block-h">Starter Library</h3>
+      <p class="sub-line" style="margin-bottom:12px">Loads the 14 processes from your Technical Manual as drafts. Only available while the library is empty, to avoid overwriting your work.</p>
+      <button class="btn ${state.library.length?'':'primary'}" id="loadStarter2" ${state.library.length?'disabled style="opacity:.45;cursor:not-allowed"':''}>Load starter library${state.library.length?' (library not empty)':' (14 processes)'}</button>
+    </div>
+  </div>`;
+}
+
+/* ---- setup ---- */
+function setupHTML(){
+  return `<div class="setup-wrap"><div class="setup">
+    <div class="sub">Theodore Ellison Designs</div>
+    <h1>Process Library — Setup</h1>
+    <p>Connect this app to your Google Apps Script backend. You only do this once on each device.</p>
+    <ol>
+      <li>Open your Apps Script project and deploy it as a Web App (Execute as: Me · Who has access: Anyone).</li>
+      <li>Copy the deployment URL that ends in <span class="mono">/exec</span>.</li>
+      <li>Paste it below and connect.</li>
+    </ol>
+    <input id="setupUrl" placeholder="https://script.google.com/macros/s/…/exec" class="mono">
+    <button class="btn primary" id="setupConnect" style="width:100%">Connect</button>
+    <div class="setup-msg" id="setupMsg"></div>
+  </div></div>`;
+}
+
+/* ============ WIRING ============ */
+function wireSetup(){
+  $('#setupConnect').onclick=async()=>{
+    const url=$('#setupUrl').value.trim();
+    const msg=$('#setupMsg');
+    if(!/^https:\/\/script\.google\.com\/.*\/exec$/.test(url)){ msg.className='setup-msg err'; msg.textContent='That doesn\'t look like an Apps Script /exec URL.'; return; }
+    msg.className='setup-msg'; msg.textContent='Connecting…';
+    state.execUrl=url;
+    try{
+      const res=await apiRead();
+      if(res&&res.ok){
+        localStorage.setItem(LS_URL,url);
+        msg.className='setup-msg ok'; msg.textContent='Connected.';
+        applyData(res.data||{}); state.loaded=true;
+        setTimeout(()=>{render();},400);
+      } else { throw new Error('bad'); }
+    }catch(e){ state.execUrl=''; msg.className='setup-msg err'; msg.textContent='Could not reach the backend. Check the URL and that access is set to “Anyone”.'; }
+  };
+}
+
+function wireMain(){
+  document.querySelectorAll('[data-nav]').forEach(b=>b.onclick=()=>{ if(b.dataset.nav==='new'){state.draft=null;} go(b.dataset.nav); });
+  document.querySelectorAll('[data-open]').forEach(b=>b.onclick=(e)=>{e.preventDefault();go('detail',b.dataset.open);});
+  const ls=$('#loadStarter')||$('#loadStarter2'); if(ls&&!ls.disabled) ls.onclick=loadStarter;
+
+  if(state.view==='list'){
+    const s=$('#search'); if(s){ s.oninput=()=>{ state.query=s.value; const pos=s.selectionStart; renderListOnly(); const ns=$('#search'); if(ns){ns.focus(); ns.setSelectionRange(pos,pos);} }; }
+    document.querySelectorAll('[data-filter]').forEach(b=>b.onclick=()=>{state.filter=b.dataset.filter;render();});
+  }
+  if(state.view==='detail'){
+    const p=state.currentId;
+    const eb=$(`[data-edit="${p}"]`); if(eb) eb.onclick=()=>{state.draft=null;go('edit',p);};
+    const pb=$(`[data-print="${p}"]`); if(pb) pb.onclick=()=>printProcess(p);
+    const db=$(`[data-del="${p}"]`); if(db) db.onclick=()=>delProcess(p);
+  }
+  if(state.view==='new'||state.view==='edit') wireForm();
+  if(state.view==='categories') wireCategories();
+  if(state.view==='settings') wireSettings();
+}
+function renderListOnly(){ $('#main').innerHTML=listHTML(); wireMain(); }
+
+/* form wiring — read DOM into draft on each change so re-render keeps values */
+function readForm(){
+  const d=state.draft;
+  const v=id=>{const el=$('#'+id);return el?el.value:'';};
+  d.title=v('f-title'); d.category=v('f-cat'); d.status=v('f-status'); d.subcategory=v('f-sub'); d.summary=v('f-summary'); d.safety=v('f-safety');
+  d.materials=[...document.querySelectorAll('[data-mat]')].map(e=>e.value);
+  d.relatedProcesses=[...document.querySelectorAll('[data-rel]')].filter(e=>e.checked).map(e=>e.dataset.rel);
+  d.sections.forEach((s,si)=>{
+    const t=$(`[data-sectitle="${si}"]`); if(t)s.title=t.value;
+    s.steps.forEach((st,sti)=>{
+      const tt=$(`[data-steptitle="${si}-${sti}"]`); if(tt)st.title=tt.value;
+      const dd=$(`[data-stepdesc="${si}-${sti}"]`); if(dd)st.description=dd.value;
+      const nn=$(`[data-stepnotes="${si}-${sti}"]`); if(nn)st.notes=nn.value;
+    });
+  });
+}
+function reForm(){ const id=state.view==='edit'?state.currentId:null; $('#main').innerHTML=formHTML(id); wireForm(); }
+function wireForm(){
+  const d=state.draft;
+  $('#addMat').onclick=()=>{readForm();d.materials.push('');reForm();};
+  document.querySelectorAll('[data-delmat]').forEach(b=>b.onclick=()=>{readForm();d.materials.splice(+b.dataset.delmat,1);if(!d.materials.length)d.materials=[''];reForm();});
+  $('#addSec').onclick=()=>{readForm();d.sections.push({id:uid('sec'),title:'',steps:[{id:uid('s'),title:'',description:'',notes:''}]});reForm();};
+  document.querySelectorAll('[data-delsec]').forEach(b=>b.onclick=()=>{readForm();d.sections.splice(+b.dataset.delsec,1);if(!d.sections.length)d.sections=[{id:uid('sec'),title:'',steps:[{id:uid('s'),title:'',description:'',notes:''}]}];reForm();});
+  document.querySelectorAll('[data-addstep]').forEach(b=>b.onclick=()=>{readForm();d.sections[+b.dataset.addstep].steps.push({id:uid('s'),title:'',description:'',notes:''});reForm();});
+  document.querySelectorAll('[data-delstep]').forEach(b=>b.onclick=()=>{readForm();const[si,sti]=b.dataset.delstep.split('-').map(Number);d.sections[si].steps.splice(sti,1);if(!d.sections[si].steps.length)d.sections[si].steps=[{id:uid('s'),title:'',description:'',notes:''}];reForm();});
+  $('#saveProc').onclick=saveProc;
+}
+function saveProc(){
+  readForm(); const d=state.draft;
+  if(!d.title.trim()){ toast('Give the process a title first'); $('#f-title').focus(); return; }
+  d.materials=d.materials.map(m=>m.trim()).filter(Boolean);
+  d.lastEditedBy=state.userName||d.lastEditedBy||''; d.lastEditedAt=new Date().toISOString();
+  if(!d.author) d.author=state.userName||'';
+  const idx=state.library.findIndex(p=>p.id===d.id);
+  if(idx>=0) state.library[idx]=d; else state.library.unshift(d);
+  saveLibrary();
+  const id=d.id; state.draft=null; toast(idx>=0?'Changes saved':'Process created'); go('detail',id);
+}
+function delProcess(id){
+  const p=state.library.find(x=>x.id===id);
+  if(!confirm(`Delete “${p?p.title:'this process'}”? This can't be undone.`)) return;
+  state.library=state.library.filter(x=>x.id!==id);
+  state.library.forEach(x=>{ if(x.relatedProcesses) x.relatedProcesses=x.relatedProcesses.filter(r=>r!==id); });
+  saveLibrary(); toast('Process deleted'); go('list');
+}
+
+function wireCategories(){
+  $('#addCat').onclick=()=>{ readCats(); state.categories.push({id:uid('cat'),name:'New Category',color:'#5C3D2E'}); $('#main').innerHTML=categoriesHTML(); wireCategories(); };
+  document.querySelectorAll('[data-delcat]').forEach(b=>{ if(b.disabled)return; b.onclick=()=>{ readCats(); state.categories.splice(+b.dataset.delcat,1); $('#main').innerHTML=categoriesHTML(); wireCategories(); }; });
+  $('#saveCats').onclick=()=>{ readCats(); saveCategories(); toast('Categories saved'); go('list'); };
+}
+function readCats(){
+  document.querySelectorAll('[data-cat]').forEach(row=>{
+    const i=+row.dataset.cat;
+    const n=$(`[data-catname="${i}"]`), c=$(`[data-catcolor="${i}"]`);
+    if(state.categories[i]){ if(n)state.categories[i].name=n.value; if(c)state.categories[i].color=c.value; }
+  });
+}
+
+function wireSettings(){
+  $('#saveSettings').onclick=()=>{
+    state.userName=$('#f-username').value.trim(); localStorage.setItem(LS_USER,state.userName);
+    const newUrl=$('#f-execurl').value.trim();
+    if(newUrl && newUrl!==state.execUrl){ state.execUrl=newUrl; localStorage.setItem(LS_URL,newUrl); loadAll(); }
+    toast('Settings saved'); render();
+  };
+}
+
+/* ---- print ---- */
+function printProcess(id){
+  const p=state.library.find(x=>x.id===id); if(!p) return;
+  const c=catById(p.category);
+  const mats=(p.materials||[]).filter(m=>m&&m.trim());
+  const sections=(p.sections||[]).filter(s=>(s.steps||[]).some(st=>st.description||st.title)||(s.title&&s.title.trim()));
+  const w=window.open('','_blank');
+  const css=`
+    @page{margin:0.7in}
+    body{font-family:'DM Sans',Arial,sans-serif;color:#1B2838;line-height:1.5;margin:0}
+    .top{border-bottom:3px solid ${c.color};padding-bottom:12px;margin-bottom:20px}
+    .cat{font-family:'DM Mono',monospace;font-size:10px;letter-spacing:2px;text-transform:uppercase;color:${c.color}}
+    h1{font-size:24px;margin:4px 0 6px}
+    .org{font-size:11px;color:#6B6256;letter-spacing:1px;text-transform:uppercase}
+    .lede{font-size:14px;color:#473d30;margin:0 0 18px}
+    .safety{background:#FBF1EC;border-left:4px solid ${c.color};padding:10px 14px;font-size:12.5px;margin:0 0 18px;color:#7a4a2a}
+    .h{font-family:'DM Mono',monospace;font-size:10px;letter-spacing:2px;text-transform:uppercase;color:#6B6256;border-bottom:1px solid #ddd;padding-bottom:5px;margin:0 0 10px}
+    .mats{margin:0 0 18px;padding-left:0;list-style:none;columns:2;font-size:12.5px}
+    .mats li{margin-bottom:3px}
+    .mats li:before{content:'· ';color:${c.color}}
+    .sec{font-weight:700;font-size:14px;margin:16px 0 8px;color:${c.color}}
+    ol.steps{padding-left:0;list-style:none;counter-reset:s;margin:0}
+    ol.steps li{counter-increment:s;display:flex;gap:10px;padding:6px 0;page-break-inside:avoid;border-top:1px dotted #ddd}
+    ol.steps li:before{content:counter(s);font-family:'DM Mono',monospace;font-size:11px;background:${c.color};color:#fff;width:20px;height:20px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex:0 0 20px;margin-top:1px}
+    .st b{display:block}
+    .note{font-size:11px;color:#6B6256;background:#F3EFE7;border-left:2px solid #ccc;padding:4px 8px;margin-top:4px}
+    .sign{margin-top:30px;padding-top:14px;border-top:1px solid #ccc;display:flex;gap:40px;font-size:11px;color:#6B6256}
+    .sign div{flex:1}
+    .line{border-bottom:1px solid #999;height:24px;margin-top:18px}
+    .foot{margin-top:24px;font-size:10px;color:#999;font-family:'DM Mono',monospace}
+  `;
+  const html=`<!doctype html><html><head><meta charset="utf-8"><title>${esc(p.title)}</title>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <style>${css}</style></head><body>
+    <div class="top"><div class="cat">${esc(c.name)}${p.subcategory?' · '+esc(p.subcategory):''}</div>
+      <h1>${esc(p.title)}</h1><div class="org">Theodore Ellison Designs · Process Library</div></div>
+    ${p.summary?`<p class="lede">${esc(p.summary)}</p>`:''}
+    ${p.safety&&p.safety.trim()?`<div class="safety"><b>Safety:</b> ${esc(p.safety)}</div>`:''}
+    ${mats.length?`<div class="h">Materials &amp; Tools</div><ul class="mats">${mats.map(m=>`<li>${esc(m)}</li>`).join('')}</ul>`:''}
+    <div class="h">Procedure</div>
+    ${sections.map(s=>{const steps=(s.steps||[]).filter(st=>st.description||st.title);
+      return `${s.title&&s.title.trim()?`<div class="sec">${esc(s.title)}</div>`:''}<ol class="steps">${steps.map(st=>`<li><div class="st">${st.title&&st.title.trim()?`<b>${esc(st.title)}</b>`:''}${esc(st.description)}${st.notes&&st.notes.trim()?`<div class="note">${esc(st.notes)}</div>`:''}</div></li>`).join('')}</ol>`;
+    }).join('')}
+    <div class="sign"><div>Reviewed by<div class="line"></div></div><div>Date<div class="line"></div></div></div>
+    <div class="foot">${p.status} · printed ${new Date().toLocaleDateString()}</div>
+    </body></html>`;
+  w.document.write(html); w.document.close();
+  setTimeout(()=>{w.focus();w.print();},500);
+}
+
+/* boot */
+if(state.execUrl){ loadAll(); } else { render(); }
+</script>
+</body>
+</html>
